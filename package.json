@@ -1,0 +1,17 @@
+{
+  "name": "csvtools",
+  "version": "1.0.0",
+  "description": "An assortment of csv comparison tools for Kristin",
+  "main": "main.js",
+  "dependencies": {
+    "chalk": "^2.3.0",
+    "async": "^2.6.0",
+    "d3-dsv": "^1.0.8"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Daniel Green",
+  "license": "ISC"
+}
