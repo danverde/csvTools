@@ -9,7 +9,7 @@ const d3 = require('d3-dsv'),
    chalk = require('chalk');
 
 /* a global var. Eww */
-var fileNames = ['add.csv', 'journal.csv', 'activeItems.csv'];
+var fileNames = ['Adage.csv', 'Purchase Journal.csv', 'Optiva List.csv'];
 
 
 function writeResults(resuts, fileName) {
@@ -25,9 +25,9 @@ function writeResults(resuts, fileName) {
 function findConsistentItems(lists) {
    var consistentItems = [],
       masterList = [],
-      itemCodes;
+      itemCodes = [];
 
-   /*populate master list */
+   /*populate master list containg all items in one array */
    lists.forEach((list) => {
       masterList = masterList.concat(list);
    });
@@ -36,6 +36,8 @@ function findConsistentItems(lists) {
       return item['Item Code'];
    });
 
+   /* get all consistent items.. */
+   /* DOESN'T CHECK FOR INSTANCES IN ALL LISTS! AN ITEM COULD OCCUR TWICE IN ONE LIST & THIS WOULD PASS IT!! */
    consistentItems = itemCodes.filter((code) => {
       if (itemCodes.indexOf(code) != itemCodes.lastIndexOf(code))
          return true;
@@ -62,6 +64,19 @@ function findConsistentItems(lists) {
 }
 
 
+function filterList(list, readCb) {
+   list = list.map(item => {
+      return {
+         id: item['Item Code'],
+         description : item['Description']
+      };
+   });
+   
+   list = [...list];
+   readCb(null, list);
+}
+
+
 /***************************************************************
  *read in a single csv & return a JSON object with it's contents 
  ****************************************************************/
@@ -75,7 +90,8 @@ function readCSV(fileName, readCb) {
 
       data = d3.csvParse(data);
 
-      readCb(null, data);
+      // readCb(null, data);
+      filterList(data, readCb);
    });
 }
 
