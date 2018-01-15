@@ -9,11 +9,12 @@ const d3 = require('d3-dsv'),
    chalk = require('chalk');
 
 /* a global var. Eww */
-var fileNames = ['Adage.csv', 'Purchase Journal.csv', 'Optiva List.csv'];
+var fileNames = ['Optiva List.csv', 'Adage.csv', 'Purchase Journal.csv'];
 
 
-function writeResults(resuts, fileName) {
-   fs.writeFile(`./reports/${fileName}`, resuts, (err) => {
+function writeResults(results, fileName) {
+   results = results.csvFormat(masterList);
+   fs.writeFile(`./reports/${fileName}`, results, (err) => {
       if (err) {
          console.error(chalk.red('Err writing results'), err);
          return
@@ -22,45 +23,18 @@ function writeResults(resuts, fileName) {
    });
 }
 
-function findConsistentItems(lists) {
-   var consistentItems = [],
-      masterList = [],
-      itemCodes = [];
 
-   /*populate master list containg all items in one array */
-   lists.forEach((list) => {
-      masterList = masterList.concat(list);
-   });
+function compareLists(list1, list2) {
+   var duplicates = [];
 
-   itemCodes = masterList.map((item) => {
-      return item['Item Code'];
-   });
-
-   /* get all consistent items.. */
-   /* DOESN'T CHECK FOR INSTANCES IN ALL LISTS! AN ITEM COULD OCCUR TWICE IN ONE LIST & THIS WOULD PASS IT!! */
-   consistentItems = itemCodes.filter((code) => {
-      if (itemCodes.indexOf(code) != itemCodes.lastIndexOf(code))
-         return true;
-      else
-         return false;
-   });
-   
-   var temp;
-   consistentItems = consistentItems.map((code) => {
-      temp = {};
-      masterList.forEach((item) => {
-         if (item['Item Code'] == code) {
-            temp.itemCode = code;
-            temp.Description = item.Description;
-         }
+   list1.forEach(item1 => {
+      list2.forEach(item2 => {
+         if (item1.id == item2.id)
+            duplicates.push(item1);
       });
-      return temp;
    });
-   
-   // console.log(consistentItems.length);
-   var sConsistentItems = d3.csvFormat(consistentItems);
-   // JSON.stringify(consistentItems);
-   writeResults(sConsistentItems, 'nonUniqueItems.csv');
+
+   return [...duplicates];
 }
 
 
@@ -68,10 +42,10 @@ function filterList(list, readCb) {
    list = list.map(item => {
       return {
          id: item['Item Code'],
-         description : item['Description']
+         description: item['Description']
       };
    });
-   
+
    list = [...list];
    readCb(null, list);
 }
@@ -106,9 +80,18 @@ function init() {
       }
 
       console.log(chalk.green('done reading files'));
-      console.log('files:', files.length);
-      // do work
-      findConsistentItems(files);
+      // console.log('files:', files.length);
+
+      function dulpicateItems() {
+         var masterList = compareLists(files[0], files[1]);
+         for (var i = 2; i < files.length; i++) {
+            masterList = compareLists(masterList, files[i]);
+         }
+      }
+
+      console.log(`Duplicate items found: ${masterList.length}`);
+
+      writeResults(masterList, 'Duplicates.csv');
    });
 }
 
